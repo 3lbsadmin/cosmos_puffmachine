@@ -17,7 +17,7 @@ class PumpController
 	int speedControlPinMode = 5;
 	int highFrequency = 0;
 	int speedValue = 0;
-	int lowFrequency = 100;
+	int lowFrequency = 70;
 
 	int state = 0;
 
@@ -210,12 +210,14 @@ public:
 	void PullStage()
 	{
 		pumpController.PullState();
+		Serial.println( "in pull state");
 		Write();
 	}
 
 	void RestStage()
 	{
 		pumpController.LowState();
+		Serial.println( "in rest state");
 		sessions++;
 
 		Write();
@@ -273,7 +275,7 @@ public:
 		logfile.print(now.second(), DEC);
 		logfile.print('"');
 
-		Serial.print(now.unixtime()); // seconds since 1/1/1970
+		/*Serial.print(now.unixtime()); // seconds since 1/1/1970
 		Serial.print(", ");
 		Serial.print('"');
 		Serial.print(now.year(), DEC);
@@ -287,7 +289,7 @@ public:
 		Serial.print(now.minute(), DEC);
 		Serial.print(":");
 		Serial.print(now.second(), DEC);
-		Serial.print('"');
+		Serial.print('"');*/
 
 		logfile.print(", ");
 		logfile.print(sessions);
