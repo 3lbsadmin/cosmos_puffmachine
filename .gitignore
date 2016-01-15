@@ -30,4 +30,8 @@
 
 Release/
 .setting/
+*.setting/
+.cproject
+.ino.*
+spec.d
 
