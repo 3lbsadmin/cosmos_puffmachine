@@ -15,10 +15,14 @@ class PumpController
 
 	int motorPinMode = 9;
 	int speedControlPinMode = 5;
-	int currentFrequency = 0;
+	int highFrequency = 0;
 	int speedValue = 0;
+	int lowFrequency = 100;
+
+	int state = 0;
 
 	bool running = false;
+
 
 public:
 	PumpController()
@@ -28,16 +32,24 @@ public:
 
 	void Update()
 	{
-		if (running)
-		{
-			speedValue = analogRead(speedControlPinMode) / 4;
+		speedValue = analogRead(speedControlPinMode) / 4;
 
-			if (speedValue != currentFrequency)
-			{
-				currentFrequency = speedValue;
-				analogWrite(motorPinMode, currentFrequency);
-			}
+		if (speedValue != highFrequency)
+		{
+			highFrequency = speedValue;
+			Serial.print("Control value: ");
+			Serial.println(highFrequency);
 		}
+	}
+
+	void PullState()
+	{
+		analogWrite(motorPinMode, highFrequency);
+	}
+
+	void LowState()
+	{
+		analogWrite(motorPinMode, lowFrequency);
 	}
 
 	void Start()
@@ -54,7 +66,7 @@ public:
 	void Reset()
 	{
 		running = false;
-		currentFrequency = 0;
+		highFrequency = 0;
 		speedValue = 0;
 		//pinMode( speedControlPinMode, INPUT );
 		//analogWrite( pinMode, 124 );
@@ -95,11 +107,12 @@ class PenLightSensor
 {
 public:
 
-	int lightPinMode = 2;
+	int lightPinMode = 3;
+	int lightValue = 0;
 
 	PenLightSensor()
 	{
-		pinMode( lightPinMode, INPUT );
+		pinMode(lightPinMode, INPUT);
 	}
 
 	void Initialize()
@@ -107,9 +120,10 @@ public:
 
 	}
 
-	int getValue ()
+	int getValue()
 	{
-
+		lightValue = analogRead(lightPinMode);
+		return lightValue;
 	}
 
 	void Update()
@@ -120,7 +134,6 @@ public:
 
 class PenTest
 {
-
 
 	bool testStarted = false;
 
@@ -183,6 +196,11 @@ public:
 
 	}
 
+	void SetUp()
+	{
+
+	}
+
 	void Start()
 	{
 		Reset();
@@ -191,13 +209,13 @@ public:
 
 	void PullStage()
 	{
-		pumpController.Start();
+		pumpController.PullState();
 		Write();
 	}
 
 	void RestStage()
 	{
-		pumpController.Stop();
+		pumpController.LowState();
 		sessions++;
 
 		Write();
@@ -255,22 +273,21 @@ public:
 		logfile.print(now.second(), DEC);
 		logfile.print('"');
 
-
-		  Serial.print(now.unixtime()); // seconds since 1/1/1970
-		  Serial.print(", ");
-		  Serial.print('"');
-		  Serial.print(now.year(), DEC);
-		  Serial.print("/");
-		  Serial.print(now.month(), DEC);
-		  Serial.print("/");
-		  Serial.print(now.day(), DEC);
-		  Serial.print(" ");
-		  Serial.print(now.hour(), DEC);
-		  Serial.print(":");
-		  Serial.print(now.minute(), DEC);
-		  Serial.print(":");
-		  Serial.print(now.second(), DEC);
-		  Serial.print('"');
+		Serial.print(now.unixtime()); // seconds since 1/1/1970
+		Serial.print(", ");
+		Serial.print('"');
+		Serial.print(now.year(), DEC);
+		Serial.print("/");
+		Serial.print(now.month(), DEC);
+		Serial.print("/");
+		Serial.print(now.day(), DEC);
+		Serial.print(" ");
+		Serial.print(now.hour(), DEC);
+		Serial.print(":");
+		Serial.print(now.minute(), DEC);
+		Serial.print(":");
+		Serial.print(now.second(), DEC);
+		Serial.print('"');
 
 		logfile.print(", ");
 		logfile.print(sessions);
@@ -311,7 +328,6 @@ bool sessionOn = false;
 
 int sessionCount = 0;
 
-
 SimpleTimer timer;
 
 void testComplete()
@@ -324,7 +340,6 @@ void setup()
 	Serial.begin(9600);
 	// Add your initialization code here
 
-	Serial.println( "hi ahmed you have a good update!!");
 	// add event to a button
 	//gEM.addListener( EventManager::kEventAnalog5, initializeNewTest );
 
@@ -333,7 +348,6 @@ void setup()
 	mainButton.pressHandler(handleOnButtonDown);
 
 	penTestModel.Reset();
-
 
 }
 
@@ -356,14 +370,13 @@ void PenStateChange()
 	Serial.println(sessionOn);
 }
 
-
 void handleOnButtonDown(Button& b)
 {
 
-	if ( !testRunning )
+	if (!testRunning)
 	{
-		Serial.print("start new project:");
-		Serial.println( sessionCount++ );
+		Serial.print("start new test:");
+		Serial.println(sessionCount++);
 		testRunning = true;
 
 		penTestModel.Start();
@@ -373,16 +386,15 @@ void handleOnButtonDown(Button& b)
 	}
 	else
 	{
-		 Serial.print( "end project:" );
-		 Serial.println( sessionCount );
+		Serial.print("end test:");
+		Serial.println(sessionCount);
 
-		 testRunning = false;
+		testRunning = false;
 
-		 penTestModel.Stop();
+		penTestModel.Stop();
 
-		 timer.deleteTimer(PULL_DURATION);
-		 timer.deleteTimer(REST_DURATION);
-
+		timer.deleteTimer(PULL_DURATION);
+		timer.deleteTimer(REST_DURATION);
 	}
 }
 
