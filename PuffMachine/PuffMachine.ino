@@ -94,12 +94,20 @@ public:
 class PenLightSensor
 {
 public:
+
+	int lightPinMode = 2;
+
 	PenLightSensor()
+	{
+		pinMode( lightPinMode, INPUT );
+	}
+
+	void Initialize()
 	{
 
 	}
 
-	void Initialize()
+	int getValue ()
 	{
 
 	}
@@ -112,6 +120,7 @@ public:
 
 class PenTest
 {
+
 
 	bool testStarted = false;
 
@@ -300,6 +309,9 @@ int REST_DURATION = 5000;
 
 bool sessionOn = false;
 
+int sessionCount = 0;
+
+
 SimpleTimer timer;
 
 void testComplete()
@@ -312,6 +324,7 @@ void setup()
 	Serial.begin(9600);
 	// Add your initialization code here
 
+	Serial.println( "hi ahmed you have a good update!!");
 	// add event to a button
 	//gEM.addListener( EventManager::kEventAnalog5, initializeNewTest );
 
@@ -343,15 +356,34 @@ void PenStateChange()
 	Serial.println(sessionOn);
 }
 
+
 void handleOnButtonDown(Button& b)
 {
-	Serial.println("start new project");
 
-	testRunning = true;
+	if ( !testRunning )
+	{
+		Serial.print("start new project:");
+		Serial.println( sessionCount++ );
+		testRunning = true;
 
-	penTestModel.Start();
+		penTestModel.Start();
 
-	PenStateChange();
+		PenStateChange();
+
+	}
+	else
+	{
+		 Serial.print( "end project:" );
+		 Serial.println( sessionCount );
+
+		 testRunning = false;
+
+		 penTestModel.Stop();
+
+		 timer.deleteTimer(PULL_DURATION);
+		 timer.deleteTimer(REST_DURATION);
+
+	}
 }
 
 // The loop function is called in an endless loop
