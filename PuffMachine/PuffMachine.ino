@@ -17,12 +17,11 @@ class PumpController
 	int speedControlPinMode = 5;
 	int highFrequency = 0;
 	int speedValue = 0;
-	int lowFrequency = 70;
+	int lowFrequency = 40;
 
 	int state = 0;
 
 	bool running = false;
-
 
 public:
 	PumpController()
@@ -30,7 +29,7 @@ public:
 		pinMode(motorPinMode, OUTPUT);
 	}
 
-	void Update()
+	void update()
 	{
 		speedValue = analogRead(speedControlPinMode) / 4;
 
@@ -42,22 +41,17 @@ public:
 		}
 	}
 
-	void PullState()
+	void pullState()
 	{
 		analogWrite(motorPinMode, highFrequency);
 	}
 
-	void LowState()
+	void lowState()
 	{
 		analogWrite(motorPinMode, lowFrequency);
 	}
 
-	void Start()
-	{
-		running = true;
-	}
-
-	void Stop()
+	void stop()
 	{
 		Reset();
 		analogWrite(motorPinMode, 0);
@@ -79,7 +73,9 @@ class PresureSensor
 	int sensePinB = 1; // 4 on sensor
 
 	int deltaPinAB;
-	float pressdiff;
+	float pressdiff = 0;
+
+	float maxPressure = 0;
 
 public:
 	PresureSensor()
@@ -93,13 +89,30 @@ public:
 
 	}
 
-	void Update()
+	void puffStart ()
+	{
+		maxPressure = 0;
+	}
+
+	void puffEnd ()
+	{
+
+	}
+
+	float getMaxPressure ()
+	{
+		return maxPressure;
+	}
+
+	void update()
 	{
 		deltaPinAB = analogRead(sensePinA) - analogRead(sensePinB);
 		pressdiff = deltaPinAB * 4.33 / 70; //sensor is 70mV per psi, 1 byte is 4.33mV
 
-		//Serial.print("The Pressure Difference is ");
-		//	Serial.println(pressdiff);
+		if ( pressdiff > maxPressure )
+		{
+			maxPressure = pressdiff;
+		}
 	}
 };
 
@@ -107,15 +120,28 @@ class PenLightSensor
 {
 public:
 
+	int NO_LED_ON_TIME = 10000; // 10 seconds
+	int FLASH_TIME = 1000; // 1 second
+	int BATTERY_DEAD_FLASH_COUNT = 10;
+	int OUTPUT_CUTOFF_FLASH_COUNT = 2;
+	int PUFF_MAX_TIME = 5000;
+
+	int flashCount = 0;
 	int lightPinMode = 3;
 	int lightValue = 0;
+	bool _started = false;
+	bool _on = false;
+	unsigned long _onTime = 0;
+	unsigned long startTime = 0;
+	unsigned long totalTime = 0;
 
 	PenLightSensor()
 	{
 		pinMode(lightPinMode, INPUT);
+
 	}
 
-	void Initialize()
+	void initialize()
 	{
 
 	}
@@ -126,18 +152,71 @@ public:
 		return lightValue;
 	}
 
-	void Update()
+	bool isOn ()
+	{
+		return getValue() >= 30;
+	}
+
+	void start()
+	{
+		_onTime = 0;
+		startTime = 0;
+		totalTime = 0;
+
+		_started = true;
+	}
+
+	void failed()
 	{
 
+	}
+
+	bool isFailed()
+	{
+		return false;
+	}
+
+	bool isComplete()
+	{
+		return false;
+	}
+
+	void update()
+	{
+		if ( _started )
+		{
+			if ( _onTime )
+			{
+
+			}
+
+			if ( isOn() )
+			{
+				_on = true;
+				_onTime = millis();
+			}
+			else
+			{
+				if ( _on )
+				{
+					_on = false;
+					totalTime = millis() - _onTime;
+
+				}
+			}
+		}
+	}
+
+	void stop()
+	{
+		_started = false;
 	}
 };
 
 class PenTest
 {
 
-	bool testStarted = false;
-
-	int sessions = 0;
+	int totalPuffs = 0;
 
 	PenLightSensor lightController;
 
@@ -193,64 +272,80 @@ public:
 			logfile.println("millis,stamp,datetime,temp,press,vcc");
 
 		}
+		else
+		{
+			logfile.println(
+					"add header stuff here should be some long file like Date and Session ID");
+		}
 
 	}
 
-	void SetUp()
+	void start()
 	{
+		reset();
+		lightController.start();
+	}
+
+	void pullStage()
+	{
+		pumpController.pullState();
+		presureController.puffStart();
+		Serial.println("Moving to pull state");
+	}
+
+	void restStage()
+	{
+
+		totalPuffs++;
+		pumpController.lowState();
+		presureController.puffEnd();
+
+		write();
+
+		Serial.println("Moving to rest state");
 
 	}
 
-	void Start()
+	void stop()
 	{
-		Reset();
-		//pumpController.Start();
+		pumpController.stop();
+		lightController.stop();
 	}
 
-	void PullStage()
+	void update()
 	{
-		pumpController.PullState();
-		Serial.println( "in pull state");
-		Write();
-	}
+		lightController.update();
+		presureController.update();
+		pumpController.update();
 
-	void RestStage()
-	{
-		pumpController.LowState();
-		Serial.println( "in rest state");
-		sessions++;
-
-		Write();
-	}
-
-	void Stop()
-	{
-		pumpController.Stop();
-	}
-
-	void Update()
-	{
-		lightController.Update();
-		presureController.Update();
-		pumpController.Update();
-
-		// temperatureController
-	}
-
-	void Complete()
-	{
+		if (lightController.isFailed())
+		{
+			failed();
+		}
+		else if (lightController.isComplete())
+		{
+			complete();
+		}
 
 	}
 
-	void Write()
+	void complete()
 	{
+		stop();
+		write();
+	}
 
+	void failed()
+	{
+		stop();
+		write();
+	}
+
+	void write()
+	{
 		DateTime now;
 
 		//delay((LOG_INTERVAL -1) - (millis() % LOG_INTERVAL));
-
-		//digitalWrite(greenLEDpin, HIGH);
-
 		// log milliseconds since starting
 		uint32_t m = millis();
 		logfile.print(m);           // milliseconds since start
@@ -259,7 +354,7 @@ public:
 		now = RTC.now();
 		// log time
 
-		logfile.print(now.unixtime()); // seconds since 1/1/1970
+		/*logfile.print(now.unixtime()); // seconds since 1/1/1970
 		logfile.print(", ");
 		logfile.print('"');
 		logfile.print(now.year(), DEC);
@@ -273,28 +368,28 @@ public:
 		logfile.print(now.minute(), DEC);
 		logfile.print(":");
 		logfile.print(now.second(), DEC);
-		logfile.print('"');
+		logfile.print('"');*/
 
 		/*Serial.print(now.unixtime()); // seconds since 1/1/1970
-		Serial.print(", ");
-		Serial.print('"');
-		Serial.print(now.year(), DEC);
-		Serial.print("/");
-		Serial.print(now.month(), DEC);
-		Serial.print("/");
-		Serial.print(now.day(), DEC);
-		Serial.print(" ");
-		Serial.print(now.hour(), DEC);
-		Serial.print(":");
-		Serial.print(now.minute(), DEC);
-		Serial.print(":");
-		Serial.print(now.second(), DEC);
-		Serial.print('"');*/
+		 Serial.print(", ");
+		 Serial.print('"');
+		 Serial.print(now.year(), DEC);
+		 Serial.print("/");
+		 Serial.print(now.month(), DEC);
+		 Serial.print("/");
+		 Serial.print(now.day(), DEC);
+		 Serial.print(" ");
+		 Serial.print(now.hour(), DEC);
+		 Serial.print(":");
+		 Serial.print(now.minute(), DEC);
+		 Serial.print(":");
+		 Serial.print(now.second(), DEC);
+		 Serial.print('"');*/
 
+		//logfile.print(", ");
+		logfile.print(totalPuffs);
 		logfile.print(", ");
-		logfile.print(sessions);
-		logfile.print(", ");
-		logfile.print("wrote data for file 2nd time");
+		logfile.print(presureController.getMaxPressure());
 		logfile.println();
 		// if ((millis() - syncTime) < SYNC_INTERVAL) return;
 		// syncTime = millis();
@@ -302,13 +397,13 @@ public:
 		logfile.flush();
 	}
 
-	void Reset()
+	void reset()
 	{
 		Serial.println("Intialize pen test model");
 
-		sessions = 0;
+		totalPuffs = 0;
 
-		lightController.Initialize();
+		lightController.initialize();
 		presureController.Initialize();
 		pumpController.Reset();
 
@@ -320,56 +415,46 @@ PenTest penTestModel;
 
 bool testRunning = false;
 
-Button mainButton = Button(7);
+Button onOffButton = Button(7);
 
 int PULL_DURATION = 3000;
-
 int REST_DURATION = 5000;
 
-bool sessionOn = false;
+int PULL_TIMER_ID = 0;
+int REST_TIMER_ID = 0;
+
+bool puffIntervalOn = false;
 
 int sessionCount = 0;
 
 SimpleTimer timer;
 
-void testComplete()
-{
-
-}
+PumpController pumpController;
 
 void setup()
 {
 	Serial.begin(9600);
-	// Add your initialization code here
+	Serial.println("Welcome to Pen Test Setup");
 
-	// add event to a button
-	//gEM.addListener( EventManager::kEventAnalog5, initializeNewTest );
+	onOffButton.pressHandler(handleOnButtonDown);
 
-	Serial.println("Pen Test Setup");
-
-	mainButton.pressHandler(handleOnButtonDown);
-
-	penTestModel.Reset();
+	penTestModel.reset();
 
 }
 
-void PenStateChange()
+void penStateChange()
 {
-	if (sessionOn = !sessionOn)
+	if (puffIntervalOn = !puffIntervalOn)
 	{
-		timer.setTimeout(PULL_DURATION, PenStateChange);
-
-		penTestModel.PullStage();
+		PULL_TIMER_ID = timer.setTimeout(PULL_DURATION, penStateChange);
+		penTestModel.pullStage();
 	}
 	else
 	{
-		timer.setTimeout(REST_DURATION, PenStateChange);
-
-		penTestModel.RestStage();
+		//write();
+		REST_TIMER_ID = timer.setTimeout(REST_DURATION, penStateChange);
+		penTestModel.restStage();
 	}
-
-	Serial.print("State Change: ");
-	Serial.println(sessionOn);
 }
 
 void handleOnButtonDown(Button& b)
@@ -377,13 +462,13 @@ void handleOnButtonDown(Button& b)
 
 	if (!testRunning)
 	{
-		Serial.print("start new test:");
+		Serial.print("Start new pen test:");
 		Serial.println(sessionCount++);
 		testRunning = true;
 
-		penTestModel.Start();
+		penTestModel.start();
 
-		PenStateChange();
+		penStateChange();
 
 	}
 	else
@@ -393,10 +478,11 @@ void handleOnButtonDown(Button& b)
 
 		testRunning = false;
 
-		penTestModel.Stop();
+		penTestModel.stop();
 
-		timer.deleteTimer(PULL_DURATION);
-		timer.deleteTimer(REST_DURATION);
+		timer.deleteTimer(PULL_TIMER_ID);
+		timer.deleteTimer(REST_TIMER_ID);
+
 	}
 }
 
@@ -404,12 +490,13 @@ void handleOnButtonDown(Button& b)
 void loop()
 {
 
-	mainButton.process();
+	onOffButton.process();
+	penTestModel.update();
 
 	if (testRunning)
 	{
-		penTestModel.Update();
 		timer.run();
 	}
+
 }
 
