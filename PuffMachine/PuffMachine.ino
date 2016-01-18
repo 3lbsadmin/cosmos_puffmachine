@@ -15,7 +15,7 @@ class PumpController
 
 	int motorPin = 9;
 	int highFrequency = 255;
-	int lowFrequency = 60;
+	int lowFrequency = 67;
 
 	bool running = false;
 
@@ -79,11 +79,6 @@ public:
 		// analogWrite(v3,0);
 	}
 
-	void Initialize()
-	{
-
-	}
-
 	void puffStart()
 	{
 		maxPressure = 0;
@@ -130,11 +125,6 @@ public:
 	PenLightSensor()
 	{
 		pinMode(3, INPUT);
-
-	}
-
-	void initialize()
-	{
 
 	}
 
@@ -263,6 +253,9 @@ public:
 
 	void setup()
 	{
+		Serial.println("Intialize pen test model");
+
+
 		PenLightSensor lightController();
 
 		pinMode(10, OUTPUT);
@@ -454,12 +447,8 @@ public:
 
 	void reset()
 	{
-		Serial.println("Intialize pen test model");
-
 		totalPuffs = 0;
 
-		lightController.initialize();
-		presureController.Initialize();
 		pumpController.Reset();
 
 	}
@@ -493,7 +482,7 @@ void setup()
 
 	onOffButton.pressHandler(handleOnButtonDown);
 
-	penTestModel.reset();
+	penTestModel.setup();
 
 }
 
