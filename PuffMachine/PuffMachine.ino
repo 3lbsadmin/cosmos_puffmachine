@@ -31,7 +31,7 @@ public:
 
 		if (speedValue != highFrequency)
 		{
-			//highFrequency = speedValue;
+			highFrequency = speedValue;
 			//Serial.print("motor speed control value: ");
 			//Serial.println(highFrequency);
 		}
@@ -135,7 +135,7 @@ public:
 
 	bool isOn()
 	{
-		return getValue() >= 200;
+		return getValue() >= 210;
 	}
 
 	void start()
@@ -179,13 +179,14 @@ public:
 				return;
 			}
 
-			Serial.println(getValue());
-
-			if (isOn())
+			if (isOn() )
 			{
-				Serial.println("flash started");
-				_on = true;
-				_onTime = millis();
+				if ( !_on)
+				{
+					Serial.println("flash started");
+					_on = true;
+					_onTime = millis();
+				}
 			}
 			else
 			{
