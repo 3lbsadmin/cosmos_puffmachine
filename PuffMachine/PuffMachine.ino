@@ -15,7 +15,7 @@ class PumpController
 
 	int motorPin = 9;
 	int highFrequency = 255;
-	int lowFrequency = 67;
+	int lowFrequency = 69;
 
 	bool running = false;
 
@@ -158,26 +158,28 @@ public:
 
 	bool isFailed()
 	{
-		return ( status == FAILED );
+		return (status == FAILED);
 	}
 
 	bool isComplete()
 	{
-		return ( status == COMLETED );
+		return (status == COMLETED);
 	}
 
 	void update()
 	{
 
-		if ( status == STARTED )
+		if (status == STARTED)
 		{
 			unsigned long currentMillis = millis();
 
-			if (_onTime == 0 && (currentMillis - startTime) > 10000 )
+			if (_onTime == 0 && (currentMillis - startTime) > 10000)
 			{
 				failed();
 				return;
 			}
+
+			Serial.println( getValue());
 
 			if (isOn())
 			{
@@ -190,21 +192,21 @@ public:
 				{
 					_on = false;
 
-					unsigned long totalTime = millis() - _onTime;
+					unsigned long totalTime = currentMillis - _onTime;
 
-					if (totalTime < 1000 )
+					if (totalTime < 1000)
 					{
 						// add flash
 						flashes++;
 					}
 					else
 					{
-						if (flashes == 2 )
+						if (flashes == 2)
 						{
-						// two flash length = puff exceded;
+							// two flash length = puff exceded;
 
 						}
-						else if ( flashes > 9 )
+						else if (flashes > 9)
 						{
 							// 10 flashes mean battery dead
 							// then dead battery
@@ -255,7 +257,6 @@ public:
 	{
 		Serial.println("Intialize pen test model");
 
-
 		PenLightSensor lightController();
 
 		pinMode(10, OUTPUT);
@@ -294,7 +295,7 @@ public:
 
 	void start(int session)
 	{
-		/*logfile.print("Session:");
+		logfile.print("Session:");
 		logfile.print(session);
 
 		logfile.print("date:");
@@ -324,7 +325,7 @@ public:
 
 		logfile.println();
 
-		//logfile.flush();*/
+		logfile.flush();
 
 		reset();
 		lightController.start();
@@ -362,27 +363,32 @@ public:
 		presureController.update();
 		pumpController.update();
 
-		if (lightController.isFailed() == true )
+		if (lightController.isFailed() == true)
 		{
 			failed();
 		}
-		else if (lightController.isComplete() == true )
+		else if (lightController.isComplete() == true)
 		{
 			complete();
 		}
 
 	}
 
+	bool isComplete()
+	{
+		return (lightController.isComplete() || lightController.isFailed());
+	}
+
 	void complete()
 	{
-		Serial.println( "test completed" );
+		Serial.println("test completed");
 		stop();
 		write();
 	}
 
 	void failed()
 	{
-		Serial.println( "test failed" );
+		Serial.println("test failed");
 		stop();
 		write();
 	}
@@ -441,7 +447,7 @@ public:
 
 		logfile.flush();
 
-		Serial.println ( "write complete");
+		Serial.println("write complete");
 
 	}
 
@@ -517,17 +523,21 @@ void handleOnButtonDown(Button& b)
 	}
 	else
 	{
-		Serial.print("end test:");
-		Serial.println(sessionCount);
-
-		testRunning = false;
-
-		penTestModel.stop();
-
-		timer.deleteTimer(PULL_TIMER_ID);
-		timer.deleteTimer(REST_TIMER_ID);
-
+		stopTest();
 	}
+}
+
+void stopTest()
+{
+	Serial.print("end test:");
+	Serial.println(sessionCount);
+
+	testRunning = false;
+
+	penTestModel.stop();
+
+	timer.deleteTimer(PULL_TIMER_ID);
+	timer.deleteTimer(REST_TIMER_ID);
 }
 
 void loop()
@@ -538,7 +548,11 @@ void loop()
 	{
 		timer.run();
 		penTestModel.update();
-	}
 
+		if (penTestModel.isComplete())
+		{
+			stopTest();
+		}
+	}
 }
 
