@@ -199,7 +199,7 @@ public:
 
 			if (_onTime == 0 && (currentMillis - startTime) > NO_LED_ON_TIME)
 			{
-				failed();
+				//failed();
 				return;
 			}
 
@@ -233,7 +233,7 @@ public:
 							// 10 flashes mean battery dead
 							// then dead battery
 
-							complete();
+							//complete();
 						}
 
 						flashes = 0;
