@@ -179,11 +179,11 @@ public:
 				return;
 			}
 
-			Serial.println( getValue());
+			Serial.println(getValue());
 
 			if (isOn())
 			{
-				Serial.println( "flash started");
+				Serial.println("flash started");
 				_on = true;
 				_onTime = millis();
 			}
@@ -192,7 +192,7 @@ public:
 				if (_on)
 				{
 					_on = false;
-					Serial.println( "flash stopped");
+					Serial.println("flash stopped");
 
 					unsigned long totalTime = currentMillis - _onTime;
 
@@ -297,17 +297,17 @@ public:
 
 	void start(int session)
 	{
-		logfile.print("Session:");
+		logfile.print("Session: ");
 		logfile.print(session);
 
-		logfile.print("date:");
+		logfile.print(" Date:");
 
 		DateTime now;
 
 		now = RTC.now();
 
-		logfile.print(now.unixtime()); // seconds since 1/1/1970
-		logfile.print(", ");
+		//logfile.print(now.unixtime()); // seconds since 1/1/1970
+		//logfile.print(", ");
 		logfile.print('"');
 		logfile.print(now.year(), DEC);
 		logfile.print("/");
@@ -322,7 +322,7 @@ public:
 		logfile.print(now.second(), DEC);
 		logfile.print('"');
 
-		logfile.print("puff duration:");
+		logfile.print(" Puff Duration:");
 		logfile.print("5000");
 
 		logfile.println();
@@ -344,10 +344,9 @@ public:
 	{
 
 		totalPuffs++;
+		write();
 		pumpController.lowState();
 		presureController.puffEnd();
-
-		write();
 
 		//Serial.println("Moving to rest state");
 
@@ -384,15 +383,15 @@ public:
 	void complete()
 	{
 		Serial.println("test completed");
-		stop();
 		write();
+		stop();
 	}
 
 	void failed()
 	{
 		Serial.println("test failed");
-		stop();
 		write();
+		stop();
 	}
 
 	void write()
@@ -497,22 +496,25 @@ void setup()
 void penStateChange()
 {
 
-	if (puffIntervalOn = !puffIntervalOn)
+	if (testRunning)
 	{
-		PULL_TIMER_ID = timer.setTimeout(PULL_DURATION, penStateChange);
-		penTestModel.pullStage();
-	}
-	else
-	{
-		REST_TIMER_ID = timer.setTimeout(REST_DURATION, penStateChange);
-		penTestModel.restStage();
+		if (puffIntervalOn = !puffIntervalOn)
+		{
+			PULL_TIMER_ID = timer.setTimeout(PULL_DURATION, penStateChange);
+			penTestModel.pullStage();
+		}
+		else
+		{
+			REST_TIMER_ID = timer.setTimeout(REST_DURATION, penStateChange);
+			penTestModel.restStage();
+		}
 	}
 }
 
 void handleOnButtonDown(Button& b)
 {
 
-	if ( !b.wasPressed())
+	if (!b.wasPressed())
 	{
 		return;
 	}
@@ -557,6 +559,8 @@ void loop()
 
 		if (penTestModel.isComplete())
 		{
+
+			Serial.println("test is complete from model");
 			stopTest();
 		}
 	}
