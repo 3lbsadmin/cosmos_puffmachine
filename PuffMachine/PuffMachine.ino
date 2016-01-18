@@ -14,7 +14,6 @@ class PumpController
 {
 
 	int motorPin = 9;
-	int speedControlPin = 5;
 	int highFrequency = 255;
 	int lowFrequency = 60;
 
@@ -28,7 +27,7 @@ public:
 
 	void update()
 	{
-		int speedValue = analogRead(speedControlPin) / 4;
+		int speedValue = analogRead(5) / 4;
 
 		if (speedValue != highFrequency)
 		{
@@ -122,27 +121,15 @@ public:
 	const int FAILED = 3;
 
 	int status = 0;
-
-	int NO_LED_ON_TIME = 10000; // 10 seconds
-	int FLASH_TIME = 1000; // 1 second
-	int BATTERY_DEAD_FLASH_COUNT = 10;
-	int OUTPUT_CUTOFF_FLASH_COUNT = 2;
-	int PUFF_MAX_TIME = 5000;
-
-	int flashCount = 0;
-	int lightPinMode = 3;
-
 	int flashes = 0;
 
-	int lightValue = 0;
 	bool _on = false;
 	unsigned long _onTime = 0;
 	unsigned long startTime = 0;
-	unsigned long totalTime = 0;
 
 	PenLightSensor()
 	{
-		pinMode(lightPinMode, INPUT);
+		pinMode(3, INPUT);
 
 	}
 
@@ -153,8 +140,7 @@ public:
 
 	int getValue()
 	{
-		lightValue = analogRead(lightPinMode);
-		return lightValue;
+		return analogRead(3);
 	}
 
 	bool isOn()
@@ -167,7 +153,6 @@ public:
 		status = STARTED;
 		_onTime = 0;
 		startTime = millis();
-		totalTime = 0;
 	}
 
 	void complete()
@@ -201,7 +186,7 @@ public:
 		{
 			unsigned long currentMillis = millis();
 
-			if (_onTime == 0 && (currentMillis - startTime) > NO_LED_ON_TIME)
+			if (_onTime == 0 && (currentMillis - startTime) > 10000 )
 			{
 				//failed();
 				return;
@@ -218,9 +203,9 @@ public:
 				{
 					_on = false;
 
-					totalTime = millis() - _onTime;
+					unsigned long totalTime = millis() - _onTime;
 
-					if (totalTime < FLASH_TIME)
+					if (totalTime < 1000 )
 					{
 						// add flash
 						flashes++;
@@ -571,6 +556,7 @@ void loop()
 		onOffButton.process();
 		penTestModel.update();
 		timer.run();
+		Serial.println( "runnnuing");
 	}
 
 }
