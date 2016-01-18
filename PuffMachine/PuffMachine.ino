@@ -57,7 +57,7 @@ public:
 	void Reset()
 	{
 		running = false;
-		highFrequency = 0;
+		highFrequency = 255;
 		//pinMode( speedControlPinMode, INPUT );
 		//analogWrite( pinMode, 124 );
 	}
@@ -388,11 +388,11 @@ public:
 		presureController.update();
 		pumpController.update();
 
-		if (lightController.isFailed())
+		if (lightController.isFailed() == true )
 		{
 			failed();
 		}
-		else if (lightController.isComplete())
+		else if (lightController.isComplete() == true )
 		{
 			complete();
 		}
@@ -401,12 +401,14 @@ public:
 
 	void complete()
 	{
+		Serial.println( "test completed" );
 		stop();
 		write();
 	}
 
 	void failed()
 	{
+		Serial.println( "test failed" );
 		stop();
 		write();
 	}
