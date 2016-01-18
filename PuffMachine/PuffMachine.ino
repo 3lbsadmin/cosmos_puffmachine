@@ -16,10 +16,7 @@ class PumpController
 	int motorPinMode = 9;
 	int speedControlPinMode = 5;
 	int highFrequency = 0;
-	int speedValue = 0;
-	int lowFrequency = 40;
-
-	int state = 0;
+	int lowFrequency = 55;
 
 	bool running = false;
 
@@ -31,7 +28,7 @@ public:
 
 	void update()
 	{
-		speedValue = analogRead(speedControlPinMode) / 4;
+		int speedValue = analogRead(speedControlPinMode) / 4;
 
 		if (speedValue != highFrequency)
 		{
@@ -61,7 +58,6 @@ public:
 	{
 		running = false;
 		highFrequency = 0;
-		speedValue = 0;
 		//pinMode( speedControlPinMode, INPUT );
 		//analogWrite( pinMode, 124 );
 	}
@@ -89,17 +85,17 @@ public:
 
 	}
 
-	void puffStart ()
+	void puffStart()
 	{
 		maxPressure = 0;
 	}
 
-	void puffEnd ()
+	void puffEnd()
 	{
-
+		maxPressure = 0;
 	}
 
-	float getMaxPressure ()
+	float getMaxPressure()
 	{
 		return maxPressure;
 	}
@@ -109,7 +105,7 @@ public:
 		deltaPinAB = analogRead(sensePinA) - analogRead(sensePinB);
 		pressdiff = deltaPinAB * 4.33 / 70; //sensor is 70mV per psi, 1 byte is 4.33mV
 
-		if ( pressdiff > maxPressure )
+		if (pressdiff > maxPressure)
 		{
 			maxPressure = pressdiff;
 		}
@@ -128,9 +124,11 @@ public:
 
 	int flashCount = 0;
 	int lightPinMode = 3;
-	int lightValue = 0;
-	bool _started = false;
-	bool _on = false;
+	int _failed = false;
+
+
+
+	int lightValue = 0;bool _started = false;bool _on = false;
 	unsigned long _onTime = 0;
 	unsigned long startTime = 0;
 	unsigned long totalTime = 0;
@@ -152,15 +150,16 @@ public:
 		return lightValue;
 	}
 
-	bool isOn ()
+	bool isOn()
 	{
 		return getValue() >= 30;
 	}
 
 	void start()
 	{
+		_failed = false;
 		_onTime = 0;
-		startTime = 0;
+		startTime = millis();
 		totalTime = 0;
 
 		_started = true;
@@ -168,12 +167,14 @@ public:
 
 	void failed()
 	{
-
+		_failed = true;
+		_started = false;
+		Serial.println ( "failed test");
 	}
 
 	bool isFailed()
 	{
-		return false;
+		return _failed;
 	}
 
 	bool isComplete()
@@ -183,25 +184,37 @@ public:
 
 	void update()
 	{
-		if ( _started )
+		if (_started)
 		{
-			if ( _onTime )
-			{
+			unsigned long currentMillis = millis();
 
+			if (_onTime == 0 && ( currentMillis - startTime ) > NO_LED_ON_TIME )
+			{
+				failed();
+				return;
 			}
 
-			if ( isOn() )
+			if (isOn())
 			{
 				_on = true;
 				_onTime = millis();
 			}
 			else
 			{
-				if ( _on )
+				if (_on)
 				{
 					_on = false;
+
 					totalTime = millis() - _onTime;
 
+					if ( totalTime < FLASH_TIME )
+					{
+						// add flash
+					}
+					else
+					{
+
+					}
 				}
 			}
 		}
@@ -236,6 +249,10 @@ public:
 	PenTest()
 	{
 
+	}
+
+	void setup()
+	{
 		PenLightSensor lightController();
 
 		pinMode(10, OUTPUT);
@@ -274,14 +291,43 @@ public:
 		}
 		else
 		{
-			logfile.println(
-					"add header stuff here should be some long file like Date and Session ID");
 		}
-
 	}
 
-	void start()
+	void start(int session)
 	{
+		logfile.print("Session:");
+		logfile.print(session);
+
+		logfile.print("date:");
+
+		DateTime now;
+
+		now = RTC.now();
+
+		logfile.print(now.unixtime()); // seconds since 1/1/1970
+		logfile.print(", ");
+		logfile.print('"');
+		logfile.print(now.year(), DEC);
+		logfile.print("/");
+		logfile.print(now.month(), DEC);
+		logfile.print("/");
+		logfile.print(now.day(), DEC);
+		logfile.print(" ");
+		logfile.print(now.hour(), DEC);
+		logfile.print(":");
+		logfile.print(now.minute(), DEC);
+		logfile.print(":");
+		logfile.print(now.second(), DEC);
+		logfile.print('"');
+
+		logfile.print( "puff duration:");
+		logfile.print( "5000" );
+
+		logfile.println();
+
+		logfile.flush();
+
 		reset();
 		lightController.start();
 	}
@@ -343,7 +389,6 @@ public:
 
 	void write()
 	{
-		DateTime now;
 
 		//delay((LOG_INTERVAL -1) - (millis() % LOG_INTERVAL));
 		// log milliseconds since starting
@@ -351,24 +396,24 @@ public:
 		logfile.print(m);           // milliseconds since start
 		logfile.print(", ");
 
-		now = RTC.now();
-		// log time
-
 		/*logfile.print(now.unixtime()); // seconds since 1/1/1970
-		logfile.print(", ");
-		logfile.print('"');
-		logfile.print(now.year(), DEC);
-		logfile.print("/");
-		logfile.print(now.month(), DEC);
-		logfile.print("/");
-		logfile.print(now.day(), DEC);
-		logfile.print(" ");
-		logfile.print(now.hour(), DEC);
-		logfile.print(":");
-		logfile.print(now.minute(), DEC);
-		logfile.print(":");
-		logfile.print(now.second(), DEC);
-		logfile.print('"');*/
+		 DateTime now;
+		 now = RTC.now();
+
+		 logfile.print(", ");
+		 logfile.print('"');
+		 logfile.print(now.year(), DEC);
+		 logfile.print("/");
+		 logfile.print(now.month(), DEC);
+		 logfile.print("/");
+		 logfile.print(now.day(), DEC);
+		 logfile.print(" ");
+		 logfile.print(now.hour(), DEC);
+		 logfile.print(":");
+		 logfile.print(now.minute(), DEC);
+		 logfile.print(":");
+		 logfile.print(now.second(), DEC);
+		 logfile.print('"');*/
 
 		/*Serial.print(now.unixtime()); // seconds since 1/1/1970
 		 Serial.print(", ");
@@ -451,7 +496,6 @@ void penStateChange()
 	}
 	else
 	{
-		//write();
 		REST_TIMER_ID = timer.setTimeout(REST_DURATION, penStateChange);
 		penTestModel.restStage();
 	}
@@ -466,7 +510,7 @@ void handleOnButtonDown(Button& b)
 		Serial.println(sessionCount++);
 		testRunning = true;
 
-		penTestModel.start();
+		penTestModel.start(sessionCount);
 
 		penStateChange();
 
