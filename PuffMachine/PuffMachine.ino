@@ -566,17 +566,11 @@ void handleOnButtonDown(Button& b)
 void loop()
 {
 
-	if (!testRunning)
+	if (testRunning)
 	{
-
 		onOffButton.process();
 		penTestModel.update();
-
-		if (testRunning)
-		{
-			timer.run();
-		}
-
+		timer.run();
 	}
 
 }
