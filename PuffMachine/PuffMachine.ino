@@ -173,12 +173,6 @@ public:
 		{
 			unsigned long currentMillis = millis();
 
-			Serial.print( "ontime");
-			Serial.println(_onTime);
-
-			Serial.print("totaltime");
-			Serial.println( currentMillis - startTime );
-
 			if (_onTime == 0 && (currentMillis - startTime) > 10000)
 			{
 				failed();
