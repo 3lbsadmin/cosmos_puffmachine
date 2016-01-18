@@ -297,6 +297,8 @@ public:
 
 	void start(int session)
 	{
+		Serial.println( "Started Session");
+
 		logfile.print("Session: ");
 		logfile.print(session);
 
