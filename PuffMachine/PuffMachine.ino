@@ -31,7 +31,7 @@ public:
 
 		if (speedValue != highFrequency)
 		{
-			///highFrequency = speedValue;
+			//highFrequency = speedValue;
 			//Serial.print("motor speed control value: ");
 			//Serial.println(highFrequency);
 		}
