@@ -173,6 +173,12 @@ public:
 		{
 			unsigned long currentMillis = millis();
 
+			Serial.print( "ontime");
+			Serial.println(_onTime);
+
+			Serial.print("totaltime");
+			Serial.println( currentMillis - startTime );
+
 			if (_onTime == 0 && (currentMillis - startTime) > 10000)
 			{
 				failed();
@@ -335,7 +341,7 @@ public:
 
 	void pullStage()
 	{
-		Serial.println("Moving to pull state");
+		//Serial.println("Moving to pull state");
 		pumpController.pullState();
 		presureController.puffStart();
 	}
@@ -349,7 +355,7 @@ public:
 
 		write();
 
-		Serial.println("Moving to rest state");
+		//Serial.println("Moving to rest state");
 
 	}
 
