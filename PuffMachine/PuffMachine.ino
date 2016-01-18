@@ -179,16 +179,13 @@ public:
 	void update()
 	{
 
-		Serial.print( "status:");
-		Serial.println( status );
-
 		if ( status == STARTED )
 		{
 			unsigned long currentMillis = millis();
 
 			if (_onTime == 0 && (currentMillis - startTime) > 10000 )
 			{
-				//failed();
+				failed();
 				return;
 			}
 
@@ -222,7 +219,7 @@ public:
 							// 10 flashes mean battery dead
 							// then dead battery
 
-							//complete();
+							complete();
 						}
 
 						flashes = 0;
@@ -503,9 +500,6 @@ void setup()
 void penStateChange()
 {
 
-	Serial.print ( "timer callback:");
-	Serial.println( puffIntervalOn );
-
 	if (puffIntervalOn = !puffIntervalOn)
 	{
 		PULL_TIMER_ID = timer.setTimeout(PULL_DURATION, penStateChange);
@@ -547,7 +541,6 @@ void handleOnButtonDown(Button& b)
 	}
 }
 
-// The loop function is called in an endless loop
 void loop()
 {
 	onOffButton.process();
@@ -556,7 +549,6 @@ void loop()
 	{
 		timer.run();
 		penTestModel.update();
-		Serial.println( "runnnuing");
 	}
 
 }
