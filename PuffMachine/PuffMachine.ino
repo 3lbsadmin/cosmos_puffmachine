@@ -193,6 +193,10 @@ public:
 
 	void update()
 	{
+
+		Serial.print( "status:");
+		Serial.println( status );
+
 		if ( status == STARTED )
 		{
 			unsigned long currentMillis = millis();
@@ -513,6 +517,10 @@ void setup()
 
 void penStateChange()
 {
+
+	Serial.print ( "timer callback:");
+	Serial.println( puffIntervalOn );
+
 	if (puffIntervalOn = !puffIntervalOn)
 	{
 		PULL_TIMER_ID = timer.setTimeout(PULL_DURATION, penStateChange);
