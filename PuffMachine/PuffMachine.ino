@@ -512,6 +512,10 @@ void penStateChange()
 void handleOnButtonDown(Button& b)
 {
 
+	if ( !b.wasPressed())
+	{
+		return;
+	}
 	if (!testRunning)
 	{
 		Serial.print("Start new pen test:");
