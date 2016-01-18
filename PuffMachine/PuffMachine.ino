@@ -550,12 +550,12 @@ void handleOnButtonDown(Button& b)
 // The loop function is called in an endless loop
 void loop()
 {
+	onOffButton.process();
 
 	if (testRunning)
 	{
-		onOffButton.process();
-		penTestModel.update();
 		timer.run();
+		penTestModel.update();
 		Serial.println( "runnnuing");
 	}
 
