@@ -309,12 +309,7 @@ public:
 		if (!RTC.begin())
 		{
 			logfile.println("RTC failed");
-
 			logfile.println("millis,stamp,datetime,temp,press,vcc");
-
-		}
-		else
-		{
 		}
 	}
 
@@ -466,6 +461,9 @@ public:
 		// syncTime = millis();
 
 		logfile.flush();
+
+		Serial.println ( "write complete");
+
 	}
 
 	void reset()
