@@ -16,7 +16,7 @@ class PumpController
 	int motorPinMode = 9;
 	int speedControlPinMode = 5;
 	int highFrequency = 0;
-	int lowFrequency = 55;
+	int lowFrequency = 70;
 
 	bool running = false;
 
@@ -126,7 +126,7 @@ public:
 	int lightPinMode = 3;
 	int _failed = false;
 
-
+	int flashes[10];
 
 	int lightValue = 0;bool _started = false;bool _on = false;
 	unsigned long _onTime = 0;
@@ -169,7 +169,7 @@ public:
 	{
 		_failed = true;
 		_started = false;
-		Serial.println ( "failed test");
+		Serial.println("failed test");
 	}
 
 	bool isFailed()
@@ -188,7 +188,7 @@ public:
 		{
 			unsigned long currentMillis = millis();
 
-			if (_onTime == 0 && ( currentMillis - startTime ) > NO_LED_ON_TIME )
+			if (_onTime == 0 && (currentMillis - startTime) > NO_LED_ON_TIME)
 			{
 				failed();
 				return;
@@ -207,13 +207,18 @@ public:
 
 					totalTime = millis() - _onTime;
 
-					if ( totalTime < FLASH_TIME )
+					if (totalTime < FLASH_TIME)
 					{
 						// add flash
 					}
 					else
 					{
+						if (flashes)
+						{
 
+						}
+						// two flash length = puff exceded;
+						// 10 flashes mean battery dead
 					}
 				}
 			}
@@ -321,8 +326,8 @@ public:
 		logfile.print(now.second(), DEC);
 		logfile.print('"');
 
-		logfile.print( "puff duration:");
-		logfile.print( "5000" );
+		logfile.print("puff duration:");
+		logfile.print("5000");
 
 		logfile.println();
 
