@@ -193,7 +193,7 @@ public:
 
 	void update()
 	{
-		if ( status = STARTED )
+		if ( status == STARTED )
 		{
 			unsigned long currentMillis = millis();
 
