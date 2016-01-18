@@ -116,6 +116,13 @@ class PenLightSensor
 {
 public:
 
+	const int STOPPED = 0;
+	const int STARTED = 1;
+	const int COMLETED = 2;
+	const int FAILED = 3;
+
+	int status = 0;
+
 	int NO_LED_ON_TIME = 10000; // 10 seconds
 	int FLASH_TIME = 1000; // 1 second
 	int BATTERY_DEAD_FLASH_COUNT = 10;
@@ -124,11 +131,11 @@ public:
 
 	int flashCount = 0;
 	int lightPinMode = 3;
-	int _failed = false;
 
-	int flashes[10];
+	int flashes = 0;
 
-	int lightValue = 0;bool _started = false;bool _on = false;
+	int lightValue = 0;
+	bool _on = false;
 	unsigned long _onTime = 0;
 	unsigned long startTime = 0;
 	unsigned long totalTime = 0;
@@ -157,34 +164,36 @@ public:
 
 	void start()
 	{
-		_failed = false;
+		status = STARTED;
 		_onTime = 0;
 		startTime = millis();
 		totalTime = 0;
+	}
 
-		_started = true;
+	void complete()
+	{
+		status = COMLETED;
 	}
 
 	void failed()
 	{
-		_failed = true;
-		_started = false;
+		status = FAILED;
 		Serial.println("failed test");
 	}
 
 	bool isFailed()
 	{
-		return _failed;
+		return ( status == FAILED );
 	}
 
 	bool isComplete()
 	{
-		return false;
+		return ( status == COMLETED );
 	}
 
 	void update()
 	{
-		if (_started)
+		if ( status = STARTED )
 		{
 			unsigned long currentMillis = millis();
 
@@ -210,23 +219,25 @@ public:
 					if (totalTime < FLASH_TIME)
 					{
 						// add flash
+						flashes++;
 					}
 					else
 					{
-						int len = 0;
-						for (int i = 0; i < 10; i++)
+						if (flashes == 2 )
 						{
-							if (flashes[i] == 1 )
-							{
-								len++;
-							}
-						}
-						if (len > 0 )
-						{
+						// two flash length = puff exceded;
 
 						}
-						// two flash length = puff exceded;
+						else if ( flashes > 9 )
+						{
 						// 10 flashes mean battery dead
+							// then dead battery
+
+							complete();
+						}
+
+						flashes = 0;
+
 					}
 				}
 			}
@@ -235,7 +246,7 @@ public:
 
 	void stop()
 	{
-		_started = false;
+		status = STOPPED;
 	}
 };
 
