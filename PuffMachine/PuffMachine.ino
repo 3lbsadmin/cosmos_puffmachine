@@ -14,8 +14,8 @@ class PumpController
 {
 
 	int motorPin = 9;
-	int highFrequency = 255;
-	int lowFrequency = 69;
+	int highFrequency = 150;
+	int lowFrequency = 66;
 
 	bool running = false;
 
@@ -56,7 +56,7 @@ public:
 	void Reset()
 	{
 		running = false;
-		highFrequency = 255;
+		highFrequency = 150;
 		//pinMode( speedControlPinMode, INPUT );
 		//analogWrite( pinMode, 124 );
 	}
@@ -135,7 +135,7 @@ public:
 
 	bool isOn()
 	{
-		return getValue() >= 30;
+		return getValue() >= 200;
 	}
 
 	void start()
@@ -183,6 +183,7 @@ public:
 
 			if (isOn())
 			{
+				Serial.println( "flash started");
 				_on = true;
 				_onTime = millis();
 			}
@@ -191,6 +192,7 @@ public:
 				if (_on)
 				{
 					_on = false;
+					Serial.println( "flash stopped");
 
 					unsigned long totalTime = currentMillis - _onTime;
 
