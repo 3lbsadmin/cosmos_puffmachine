@@ -13,22 +13,22 @@
 class PumpController
 {
 
-	int motorPinMode = 9;
-	int speedControlPinMode = 5;
+	int motorPin = 9;
+	int speedControlPin = 5;
 	int highFrequency = 0;
-	int lowFrequency = 70;
+	int lowFrequency = 60;
 
 	bool running = false;
 
 public:
 	PumpController()
 	{
-		pinMode(motorPinMode, OUTPUT);
+		pinMode(motorPin, OUTPUT);
 	}
 
 	void update()
 	{
-		int speedValue = analogRead(speedControlPinMode) / 4;
+		int speedValue = analogRead(speedControlPin) / 4;
 
 		if (speedValue != highFrequency)
 		{
@@ -40,18 +40,18 @@ public:
 
 	void pullState()
 	{
-		analogWrite(motorPinMode, highFrequency);
+		analogWrite(motorPin, highFrequency);
 	}
 
 	void lowState()
 	{
-		analogWrite(motorPinMode, lowFrequency);
+		analogWrite(motorPin, lowFrequency);
 	}
 
 	void stop()
 	{
 		Reset();
-		analogWrite(motorPinMode, 0);
+		analogWrite(motorPin, 0);
 	}
 
 	void Reset()
@@ -213,7 +213,15 @@ public:
 					}
 					else
 					{
-						if (flashes)
+						int len = 0;
+						for (int i = 0; i < 10; i++)
+						{
+							if (flashes[i] == 1 )
+							{
+								len++;
+							}
+						}
+						if (len > 0 )
 						{
 
 						}
@@ -331,7 +339,7 @@ public:
 
 		logfile.println();
 
-		logfile.flush();
+		//logfile.flush();
 
 		reset();
 		lightController.start();
@@ -539,12 +547,17 @@ void handleOnButtonDown(Button& b)
 void loop()
 {
 
-	onOffButton.process();
-	penTestModel.update();
-
-	if (testRunning)
+	if (!testRunning)
 	{
-		timer.run();
+
+		onOffButton.process();
+		penTestModel.update();
+
+		if (testRunning)
+		{
+			timer.run();
+		}
+
 	}
 
 }
