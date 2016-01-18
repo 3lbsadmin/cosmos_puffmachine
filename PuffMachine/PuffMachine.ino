@@ -15,7 +15,7 @@ class PumpController
 
 	int motorPin = 9;
 	int speedControlPin = 5;
-	int highFrequency = 0;
+	int highFrequency = 255;
 	int lowFrequency = 60;
 
 	bool running = false;
@@ -32,9 +32,9 @@ public:
 
 		if (speedValue != highFrequency)
 		{
-			highFrequency = speedValue;
-			Serial.print("Control value: ");
-			Serial.println(highFrequency);
+			///highFrequency = speedValue;
+			//Serial.print("motor speed control value: ");
+			//Serial.println(highFrequency);
 		}
 	}
 
@@ -230,7 +230,7 @@ public:
 						}
 						else if ( flashes > 9 )
 						{
-						// 10 flashes mean battery dead
+							// 10 flashes mean battery dead
 							// then dead battery
 
 							complete();
@@ -320,7 +320,7 @@ public:
 
 	void start(int session)
 	{
-		logfile.print("Session:");
+		/*logfile.print("Session:");
 		logfile.print(session);
 
 		logfile.print("date:");
@@ -350,7 +350,7 @@ public:
 
 		logfile.println();
 
-		//logfile.flush();
+		//logfile.flush();*/
 
 		reset();
 		lightController.start();
@@ -358,9 +358,9 @@ public:
 
 	void pullStage()
 	{
+		Serial.println("Moving to pull state");
 		pumpController.pullState();
 		presureController.puffStart();
-		Serial.println("Moving to pull state");
 	}
 
 	void restStage()
@@ -417,7 +417,7 @@ public:
 		//delay((LOG_INTERVAL -1) - (millis() % LOG_INTERVAL));
 		// log milliseconds since starting
 		uint32_t m = millis();
-		logfile.print(m);           // milliseconds since start
+		logfile.print(m);           // milliseconds since
 		logfile.print(", ");
 
 		/*logfile.print(now.unixtime()); // seconds since 1/1/1970
